@@ -180,6 +180,67 @@ g(u_t,\mu_{t-1})
 G_t(x_{t-1}-\mu_{t-1}).
 $$
 
+Substitute this approximation into the nonlinear motion model:
+
+$$
+x_t
+\approx
+g(u_t,\mu_{t-1})
++
+G_t(x_{t-1}-\mu_{t-1})
++
+\epsilon_t.
+$$
+
+Because
+
+$$
+\epsilon_t\sim\mathcal N(0,R_t),
+$$
+
+the linearized conditional motion model is approximately Gaussian:
+
+$$
+p(x_t\mid u_t,x_{t-1})
+\approx
+\mathcal N\left(
+x_t;\,
+g(u_t,\mu_{t-1})+G_t(x_{t-1}-\mu_{t-1}),\,
+R_t
+\right).
+$$
+
+Equivalently, its probability density function is
+
+$$
+\begin{aligned}
+p(x_t\mid u_t,x_{t-1})
+&\approx
+\det(2\pi R_t)^{-\frac{1}{2}}\\
+&\quad
+\exp\left[
+-\frac{1}{2}
+\left(
+x_t-g(u_t,\mu_{t-1})-G_t(x_{t-1}-\mu_{t-1})
+\right)^T
+R_t^{-1}
+\left(
+x_t-g(u_t,\mu_{t-1})-G_t(x_{t-1}-\mu_{t-1})
+\right)
+\right].
+\end{aligned}
+$$
+
+The residual
+
+$$
+x_t-g(u_t,\mu_{t-1})-G_t(x_{t-1}-\mu_{t-1})
+$$
+
+is the motion error under the linearized model. The approximation symbol is
+needed because the original function $g$ is nonlinear. The covariance $R_t$
+still describes the motion noise.
+
 Taking the expected value gives the predicted mean:
 
 $$
@@ -219,11 +280,80 @@ h(x_t)
 h(\bar\mu_t)+H_t(x_t-\bar\mu_t).
 $$
 
+Substitute this approximation into the nonlinear observation model:
+
+$$
+z_t
+\approx
+h(\bar\mu_t)
++
+H_t(x_t-\bar\mu_t)
++
+\delta_t.
+$$
+
+Because
+
+$$
+\delta_t\sim\mathcal N(0,Q_t),
+$$
+
+the linearized observation likelihood is approximately Gaussian:
+
+$$
+p(z_t\mid x_t)
+\approx
+\mathcal N\left(
+z_t;\,
+h(\bar\mu_t)+H_t(x_t-\bar\mu_t),\,
+Q_t
+\right).
+$$
+
+Equivalently, its probability density function is
+
+$$
+\begin{aligned}
+p(z_t\mid x_t)
+&\approx
+\det(2\pi Q_t)^{-\frac{1}{2}}\\
+&\quad
+\exp\left[
+-\frac{1}{2}
+\left(
+z_t-h(\bar\mu_t)-H_t(x_t-\bar\mu_t)
+\right)^T
+Q_t^{-1}
+\left(
+z_t-h(\bar\mu_t)-H_t(x_t-\bar\mu_t)
+\right)
+\right].
+\end{aligned}
+$$
+
+The residual
+
+$$
+z_t-h(\bar\mu_t)-H_t(x_t-\bar\mu_t)
+$$
+
+is the measurement error under the linearized model. The covariance $Q_t$
+still describes the observation noise.
+
 The predicted observation is
 
 $$
 \hat z_t=h(\bar\mu_t).
 $$
+
+At the linearization point $x_t=\bar\mu_t$, the deviation term is zero:
+
+$$
+H_t(x_t-\bar\mu_t)=0.
+$$
+
+Therefore, the predicted measurement at the current estimate is
+$h(\bar\mu_t)$.
 
 The innovation, or measurement residual, is
 

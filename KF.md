@@ -719,12 +719,6 @@ output: $\mu_t, \Sigma_t$
 
 ### explain
 
-> [!WARNING]
->
-> more proof is need
-
-
-
 The Kalman filter algorithm has exactly that form because your two Bayes-filter steps preserve a **Gaussian belief** when both the motion model and measurement model are linear-Gaussian.
 
 You start with the Bayes filter:
@@ -916,6 +910,279 @@ is the predicted uncertainty in the measurement space. It includes uncertainty f
 
 ---
 
+#### Proof of the Kalman gain formula
+
+Start by allowing the correction to use an unknown gain matrix $K_t$:
+
+$$
+\mu_t=\bar\mu_t+K_t(z_t-C_t\bar\mu_t)
+$$
+
+We will choose $K_t$ so that the corrected estimate has the smallest possible
+mean-squared error.
+
+Define the prediction error:
+
+$$
+\bar e_t=x_t-\bar\mu_t
+$$
+
+Since the predicted belief is
+
+$$
+x_t\sim\mathcal N(\bar\mu_t,\bar\Sigma_t),
+$$
+
+we have
+
+$$
+\mathbb E[\bar e_t]=0,
+\qquad
+\mathbb E[\bar e_t\bar e_t^T]=\bar\Sigma_t.
+$$
+
+Using the measurement model
+
+$$
+z_t=C_tx_t+\delta_t,
+\qquad
+\mathbb E[\delta_t\delta_t^T]=Q_t,
+$$
+
+the corrected estimation error is
+
+$$
+\begin{aligned}
+e_t
+&=x_t-\mu_t \\
+&=x_t-\bar\mu_t-K_t(z_t-C_t\bar\mu_t) \\
+&=\bar e_t-K_t(C_t\bar e_t+\delta_t) \\
+&=(I-K_tC_t)\bar e_t-K_t\delta_t.
+\end{aligned}
+$$
+
+Assume the prediction error and measurement noise are independent. This is a
+standard Kalman-filter modeling assumption: the current sensor noise
+$\delta_t$ is assumed independent of the true state, previous estimation
+errors, and process noise. Therefore it is independent of the prediction error
+$\bar e_t$.
+
+Why does independence remove the cross terms? For independent random vectors
+$a$ and $b$,
+
+$$
+\mathbb E[ab^T]
+=
+\mathbb E[a]\mathbb E[b]^T.
+$$
+
+This is the **factorization of expectation for independent random variables**.
+Consequently,
+
+$$
+\operatorname{Cov}(a,b)
+=
+\mathbb E[(a-\mathbb E[a])(b-\mathbb E[b])^T]
+=0.
+$$
+
+In this case, both errors are zero-mean, so
+
+$$
+\mathbb E[\bar e_t\delta_t^T]
+=
+\mathbb E[\bar e_t]\mathbb E[\delta_t]^T
+=0,
+$$
+
+and similarly,
+
+$$
+\mathbb E[\delta_t\bar e_t^T]=0.
+$$
+
+Now define
+
+$$
+F_t=I-K_tC_t.
+$$
+
+Because $e_t=F_t\bar e_t-K_t\delta_t$ and $\mathbb E[e_t]=0$, its
+covariance is
+
+$$
+\begin{aligned}
+\Sigma_t(K_t)
+&=\mathbb E[e_te_t^T] \\
+&=\mathbb E[
+(F_t\bar e_t-K_t\delta_t)
+(F_t\bar e_t-K_t\delta_t)^T] \\
+&=F_t\mathbb E[\bar e_t\bar e_t^T]F_t^T
+-F_t\mathbb E[\bar e_t\delta_t^T]K_t^T \\
+&\quad
+-K_t\mathbb E[\delta_t\bar e_t^T]F_t^T
++K_t\mathbb E[\delta_t\delta_t^T]K_t^T.
+\end{aligned}
+$$
+
+The two middle cross terms are zero by independence. Using
+
+$$
+\mathbb E[\bar e_t\bar e_t^T]=\bar\Sigma_t,
+\qquad
+\mathbb E[\delta_t\delta_t^T]=Q_t,
+$$
+
+gives the corrected covariance
+
+$$
+\Sigma_t(K_t)
+=
+(I-K_tC_t)\bar\Sigma_t(I-K_tC_t)^T
++K_tQ_tK_t^T.
+$$
+
+This is also an application of the general theorem
+
+$$
+\operatorname{Cov}(Aa+Bb)
+=
+A\operatorname{Cov}(a)A^T
++B\operatorname{Cov}(b)B^T
+$$
+
+when $a$ and $b$ are independent. Without independence, two additional
+cross-covariance terms must be included, and the standard Kalman gain formula
+must be modified.
+
+This is called the **Joseph form**. Expand it:
+
+$$
+\begin{aligned}
+\Sigma_t(K_t)
+&=\bar\Sigma_t
+-K_tC_t\bar\Sigma_t
+-\bar\Sigma_tC_t^TK_t^T \\
+&\quad
++K_t(C_t\bar\Sigma_tC_t^T+Q_t)K_t^T.
+\end{aligned}
+$$
+
+To minimize the total mean-squared error, minimize the [trace](https://en.wikipedia.org/wiki/Trace_(linear_algebra))
+$\operatorname{tr}(\Sigma_t(K_t))$.
+
+The **trace** of a square matrix is the sum of its diagonal entries:
+
+$$
+\operatorname{tr}
+\begin{pmatrix}
+a & b \\
+c & d
+\end{pmatrix}
+=a+d.
+$$
+
+The diagonal entries of the error covariance matrix are the error variances of
+the individual state components. Therefore,
+
+$$
+\operatorname{tr}(\Sigma_t(K_t))
+=
+\sum_i \operatorname{Var}(e_{t,i}).
+$$
+
+Since $\Sigma_t(K_t)=\mathbb E[e_te_t^T]$ and the error is zero-mean,
+
+$$
+\begin{aligned}
+\operatorname{tr}(\Sigma_t(K_t))
+&=\operatorname{tr}(\mathbb E[e_te_t^T]) \\
+&=\mathbb E[\operatorname{tr}(e_te_t^T)] \\
+&=\mathbb E[e_t^Te_t] \\
+&=\mathbb E[\lVert e_t\rVert^2].
+\end{aligned}
+$$
+
+Thus, the trace represents the total expected squared estimation error across
+all state dimensions. Choosing
+
+$$
+K_t=\arg\min_{K_t}\operatorname{tr}(\Sigma_t(K_t))
+$$
+
+means choosing the gain that minimizes the total mean-squared error.
+
+Now let
+
+$$
+S_t=C_t\bar\Sigma_tC_t^T+Q_t.
+$$
+
+Here, $S_t$ is the covariance of the innovation
+$z_t-C_t\bar\mu_t$. Using standard matrix derivatives,
+
+$$
+\frac{\partial}{\partial K_t}
+\operatorname{tr}(K_tS_tK_t^T)=2K_tS_t,
+\qquad
+\frac{\partial}{\partial K_t}
+\operatorname{tr}(K_tC_t\bar\Sigma_t)=\bar\Sigma_tC_t^T,
+$$
+
+because $S_t$ and $\bar\Sigma_t$ are symmetric. Therefore,
+
+$$
+\frac{\partial}{\partial K_t}
+\operatorname{tr}(\Sigma_t(K_t))
+=-2\bar\Sigma_tC_t^T+2K_tS_t.
+$$
+
+At the minimum, this derivative is zero:
+
+$$
+-2\bar\Sigma_tC_t^T+2K_tS_t=0.
+$$
+
+Therefore,
+
+$$
+K_tS_t=\bar\Sigma_tC_t^T.
+$$
+
+Assuming $S_t$ is invertible,
+
+$$
+\boxed{
+K_t
+=
+\bar\Sigma_tC_t^T
+(C_t\bar\Sigma_tC_t^T+Q_t)^{-1}
+}
+$$
+
+which is the Kalman gain formula.
+
+So the Kalman gain is not chosen arbitrarily: it is the matrix that minimizes
+the expected squared error of the corrected state estimate.
+
+If this optimal $K_t$ is substituted into the Joseph form, then
+
+$$
+K_t(C_t\bar\Sigma_tC_t^T+Q_t)
+=\bar\Sigma_tC_t^T,
+$$
+
+and the covariance simplifies to
+
+$$
+\Sigma_t=(I-K_tC_t)\bar\Sigma_t.
+$$
+
+In numerical implementations, the Joseph form is often preferred because it
+better preserves symmetry and positive semidefiniteness despite rounding error.
+
+---
+
 The covariance update is
 
 $$
@@ -973,4 +1240,3 @@ $$
 $$
 
 That is why the Kalman filter has this form: it is the Bayes filter specialized to **linear dynamics + Gaussian noise + Gaussian belief**.
-
