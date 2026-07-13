@@ -35,7 +35,7 @@ final
       * The only KF-based SLAM algorithm that can used in large map.
    6. summary by `slam09-kf-wrapup.pdf`
    * > Engineers still use EKF for simple systems with very few moving parts (like a basic line-following robot). It is also used when a system needs to combine data from multiple sensors instantly (like a car combining GPS and a speedometer).
-2. grid map
+2. [grid map](./grid_map.md)
 2. scan matching
    * ICP (Iterative Closest Point)
    * It is `Front-Ends for Graph-Based SLAM` too.
